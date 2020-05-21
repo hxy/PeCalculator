@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
+        <activity android:name=".StartActivity"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,7 +20,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ChartActivity" android:screenOrientation="landscape"/>
+        <activity android:name=".PEChartActivity" android:screenOrientation="landscape"/>
+        <activity android:name=".PBMainActivity" android:screenOrientation="landscape"/>
+        <activity android:name=".PBChartActivity" android:screenOrientation="landscape"/>
     </application>
 
 </manifest>

@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,24 +39,21 @@ import okhttp3.Response;
 
 /**
  * Created by yue.huang
- * on 2020-04-15
+ * on 2020-04-1！
  */
-public class ChartActivity extends Activity {
-
-    private String[] targetMonths = {"20000630","20001229","20010629","20011231","20020628","20021231","20030630","20031231","20040630","20041231","20050630","20051230"
-            ,"20060630","20061229","20070629","20071228","20080630","20081231","20090630","20091231","20100630","20101231","20110630","20111230","20120629"
-            ,"20121231","20130628","20131231","20140630","20141231","20150630","20151231","20160630","20161230","20170630","20171229","20180629","20181228"
-            ,"20190628","20191231"};
+public class PBChartActivity extends Activity {
+    private String[] targetMonths;
     private ArrayList<String> realDays = new ArrayList<>();
     private ArrayList peList = new ArrayList<Integer>();
     private LineChartView chartView;
     private ProgressBar progressBar;
+    //成分股列表
     private StringBuilder indexListString = new StringBuilder();
     private String indexType = IndexType.ALL.value;
     private int indexRequestDepth = 0;
     private Map<String,Double> codeWightMap = new HashMap();
-    private int maxPe = 0;
-    private boolean haveWeight = false;
+    private float maxPe = 0;
+    private DecimalFormat df =new DecimalFormat("#.00");
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,8 +61,6 @@ public class ChartActivity extends Activity {
         targetMonths = getIntent().getStringArrayListExtra("month_list").toArray(new String[]{});
         progressBar = findViewById(R.id.progress_bar);
         indexType = getIntent().getStringExtra("index_type");
-        haveWeight = getIntent().getBooleanExtra("have_weight",false);
-        Log.d("yue.huang","加权："+haveWeight);
         start(indexType);
     }
 
@@ -81,13 +77,14 @@ public class ChartActivity extends Activity {
     private void requestAndCalculator(String type){
         if(type.equals(IndexType.ALL.value)){
             for(String month:targetMonths){
-               requestPEAndCalculator(month);
+               requestPBAndCalculator(month);
             }
         }else {
             for(String month:targetMonths){
                 requestIndexCompositionList(type,month);
                 if(indexListString.toString().isEmpty()){Log.d("yue.huang","continue:"+month);continue;}
-                else {requestPEAndCalculator(month);}
+                else {
+                    requestPBAndCalculator(month);}
             }
         }
         fullDataToChartAndShow();
@@ -103,6 +100,7 @@ public class ChartActivity extends Activity {
         indexListString.delete(0,indexListString.length());
         codeWightMap.clear();
         try {
+            Thread.sleep(500);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json;charset=utf-8");
             JSONObject jsonObject = new JSONObject();
@@ -143,12 +141,14 @@ public class ChartActivity extends Activity {
 //            Log.d("yue.huang",day+":"+indexListString.toString());
         }catch (Exception e){
             e.printStackTrace();
+            Log.d("yue.huang",e.toString());
         }
     }
 
-    private void requestPEAndCalculator(final String day){
+    private void requestPBAndCalculator(final String day){
         if(day == null){return;}
         try {
+            Thread.sleep(500);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json");
             JSONObject jsonObject = new JSONObject();
@@ -158,7 +158,7 @@ public class ChartActivity extends Activity {
             params.put("trade_date", day);
             jsonObject.put("params", params);
             JSONArray fields = new JSONArray();
-            fields.put("pe");
+            fields.put("pb");
             fields.put("ts_code");
             jsonObject.put("fields", fields);
             RequestBody requestBody = RequestBody.create(mediaType, jsonObject.toString());
@@ -169,18 +169,18 @@ public class ChartActivity extends Activity {
             Response response = client.newCall(request).execute();//发送请求获取返回数据
             String responseData = response.body().string();//处理返回的数据
             PeListResponse peListResponse = com.alibaba.fastjson.JSONObject.parseObject(responseData, PeListResponse.class);
-            int averagePe = calculatorAveragePe(peListResponse.getData().getItems());
-            if (averagePe == 0) {
+            float averagePb = calculatorAveragePb(peListResponse.getData().getItems());
+            if (averagePb == 0) {
                 //如果当天没有数据则去请求前一天的数据
-                Log.d("yue.huang",day+":当天pe数据为空，获取前一天数据");
-                requestPEAndCalculator(moveForwardOneDay(day));
+                Log.d("yue.huang",day+":当天pb数据为空，获取前一天数据");
+                requestPBAndCalculator(moveForwardOneDay(day));
             } else {
                 realDays.add(day);
-                peList.add(averagePe);
-                if(averagePe>maxPe){
-                    maxPe = averagePe;
+                peList.add(averagePb);
+                if(averagePb>maxPe){
+                    maxPe = averagePb;
                 }
-                Log.d("yue.huang", day + ":averagePe:" + averagePe);
+                Log.d("yue.huang", day + ":averagePb:" + averagePb);
             }
 
         } catch (Exception e) {
@@ -189,28 +189,26 @@ public class ChartActivity extends Activity {
     }
 
 
-    private int calculatorAveragePe(List<List<String>> list){
+    private float calculatorAveragePb(List<List<String>> list){
         if(list.size() == 0){return 0;}
         int size = 0;
-        double total = 0;
+        float total = 0;
         if(!indexListString.toString().isEmpty()){
             for (List<String> item : list){
-                if(indexListString.toString().contains(item.get(0)) && item.get(1)!=null){
+                if(indexListString.toString().contains(item.get(0)) && item.get(1)!=null && Float.parseFloat(item.get(1))<13){
                     size++;
-                    total+=Double.parseDouble(item.get(1))*(haveWeight?codeWightMap.get(item.get(0))*2:1);
+                    total+=Float.parseFloat(item.get(1));
                 }
             }
         }else {
             for (List<String> item : list){
-                if(!item.get(0).startsWith("300") && item.get(1)!=null){
+                if(item.get(1)!=null && Float.parseFloat(item.get(1))<13){
                     size++;
-                    total+=Double.parseDouble(item.get(1));
+                    total+=Float.parseFloat(item.get(1));
                 }
             }
         }
-
-        Log.d("yue.huang","sizesizesize:"+size);
-        return (int)(total/size);
+        return total/size;
     }
 
 
@@ -248,7 +246,7 @@ public class ChartActivity extends Activity {
         line.setPointColor(Color.parseColor("#FF8F59"));//设置节点颜色
         List<PointValue> values = new ArrayList<PointValue>();
         for (int j = 0; j< peList.size(); ++j) {
-            values.add(new PointValue(j, (int)peList.get(j)));//添加数据点
+            values.add(new PointValue(j, (float)peList.get(j)));//添加数据点
         }
         line.setValues(values);
         lines.add(line);
@@ -257,8 +255,8 @@ public class ChartActivity extends Activity {
         //y轴
         Axis axisY = new Axis().setHasLines(true);
         List<AxisValue> axisYValues = new ArrayList<AxisValue>();
-        for(int m = 0;m<300;m+=20){
-            axisYValues.add(new AxisValue(m).setLabel(""+m));
+        for(int m = 15;m<80;m+=5){
+            axisYValues.add(new AxisValue(m/10f).setLabel(""+m/10f));
         }
         axisY.setValues(axisYValues);
         //x轴
@@ -289,7 +287,7 @@ public class ChartActivity extends Activity {
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画
         Viewport v = new Viewport(chartView.getMaximumViewport());
-        v.bottom = 0f;
+        v.bottom = 1.5f;
         v.top = maxPe;
         //固定Y轴的范围,如果没有这个,Y轴的范围会根据数据的最大值和最小值决定,
         chartView.setMaximumViewport(v);

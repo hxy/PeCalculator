@@ -22,7 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends Activity {
+public class PBMainActivity extends Activity {
     private TextView clickedView;
     private TextView startTv;
     private TextView endTv;
@@ -30,15 +30,13 @@ public class MainActivity extends Activity {
     private EditText targetMonthET;
     private Spinner spinner;
     private String selectedIndexType = "all";
-    private RadioButton rbHaveWeight;
-    private RadioButton rbNoWeight;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_pbmain);
         Calendar startDate = Calendar.getInstance();
         startDate.set(1995,0,1);
-        pvTime = new TimePickerView.Builder(MainActivity.this, new TimePickerView.OnTimeSelectListener() {
+        pvTime = new TimePickerView.Builder(PBMainActivity.this, new TimePickerView.OnTimeSelectListener() {
             @Override
             public void onTimeSelect(Date date, View v) {
                 clickedView.setText(new SimpleDateFormat("yyyy-MM").format(date));
@@ -84,10 +82,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        rbHaveWeight = findViewById(R.id.have_weight);
-        rbNoWeight = findViewById(R.id.no_weight);
-        rbNoWeight.setChecked(true);
-
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -100,12 +94,11 @@ public class MainActivity extends Activity {
                     }
                 }
                 if(targetList.size() == 0){
-                    Toast.makeText(MainActivity.this,"时间范围有问题",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PBMainActivity.this,"时间范围有问题",Toast.LENGTH_SHORT).show();
                 }else {
-                    Intent intent = new Intent(MainActivity.this,ChartActivity.class);
+                    Intent intent = new Intent(PBMainActivity.this, PBChartActivity.class);
                     intent.putStringArrayListExtra("month_list",targetList);
                     intent.putExtra("index_type",selectedIndexType);
-                    intent.putExtra("have_weight",rbHaveWeight.isChecked());
                     startActivity(intent);
                 }
             }
@@ -155,7 +148,7 @@ public class MainActivity extends Activity {
     public List<String> getRangeSet(String beginDate,String endDate){
         /*Date1.after(Date2),当Date1大于Date2时，返回TRUE，当小于等于时，返回false；
           Date1.before(Date2)，当Date1小于Date2时，返回TRUE，当大于等于时，返回false；*/
-        List<String> rangeSet = new java.util.ArrayList<String>();
+        List<String> rangeSet = new ArrayList<String>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
         Date begin_date = null;
         Date end_date = null;

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center">
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="50dp">
+        <TextView
+            android:id="@+id/start_month"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="开始月份"
+            android:layout_marginRight="40dp"/>
+        <TextView
+            android:id="@+id/end_month"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="结束月份" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/target_month"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:text="01 03 05 07 09 11"
+        android:textSize="18sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:gravity="center" />
+
+    <Spinner android:id="@+id/index_type"
+        android:layout_width="200dp"
+        android:layout_height="50dp" />
+
+    <TextView
+        android:id="@+id/btn_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:text="开始"
+        android:layout_centerHorizontal="true" />
+
+</LinearLayout>

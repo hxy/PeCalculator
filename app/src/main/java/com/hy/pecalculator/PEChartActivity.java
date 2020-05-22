@@ -198,7 +198,7 @@ public class PEChartActivity extends Activity {
         float total = 0;
         if(!indexListString.toString().isEmpty()){
             for (List<String> item : list){
-                if(indexListString.toString().contains(item.get(0)) && item.get(1)!=null){
+                if(indexListString.toString().contains(item.get(0)) && item.get(1)!=null && Double.parseDouble(item.get(1))<300){
                     size++;
                     total+=Double.parseDouble(item.get(1))*(haveWeight?codeWightMap.get(item.get(0))*2:1);
                 }
@@ -213,7 +213,7 @@ public class PEChartActivity extends Activity {
         }
 
         Log.d("yue.huang","sizesizesize:"+size);
-        return (total/size/2f);
+        return (total/size/(haveWeight?1f:2f));
     }
 
 
@@ -292,7 +292,7 @@ public class PEChartActivity extends Activity {
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画
         Viewport v = new Viewport(chartView.getMaximumViewport());
-        v.bottom = 15f;
+        v.bottom = 5f;
         v.top = maxPe;
         //固定Y轴的范围,如果没有这个,Y轴的范围会根据数据的最大值和最小值决定,
         chartView.setMaximumViewport(v);

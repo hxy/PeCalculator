@@ -292,7 +292,7 @@ public class PEChartActivity extends Activity {
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画
         Viewport v = new Viewport(chartView.getMaximumViewport());
-        v.bottom = 5f;
+        v.bottom = 15f;
         v.top = maxPe;
         //固定Y轴的范围,如果没有这个,Y轴的范围会根据数据的最大值和最小值决定,
         chartView.setMaximumViewport(v);

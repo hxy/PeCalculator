@@ -20,6 +20,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".PEMainActivity" android:screenOrientation="landscape"/>
         <activity android:name=".PEChartActivity" android:screenOrientation="landscape"/>
         <activity android:name=".PBMainActivity" android:screenOrientation="landscape"/>
         <activity android:name=".PBChartActivity" android:screenOrientation="landscape"/>

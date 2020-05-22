@@ -55,7 +55,7 @@ public class PEChartActivity extends Activity {
     private String indexType = IndexType.ALL.value;
     private int indexRequestDepth = 0;
     private Map<String,Double> codeWightMap = new HashMap();
-    private int maxPe = 0;
+    private float maxPe = 0;
     private boolean haveWeight = false;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -104,6 +104,7 @@ public class PEChartActivity extends Activity {
         indexListString.delete(0,indexListString.length());
         codeWightMap.clear();
         try {
+            Thread.sleep(500);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json;charset=utf-8");
             JSONObject jsonObject = new JSONObject();
@@ -150,6 +151,7 @@ public class PEChartActivity extends Activity {
     private void requestPEAndCalculator(final String day){
         if(day == null){return;}
         try {
+            Thread.sleep(500);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json");
             JSONObject jsonObject = new JSONObject();
@@ -170,7 +172,7 @@ public class PEChartActivity extends Activity {
             Response response = client.newCall(request).execute();//发送请求获取返回数据
             String responseData = response.body().string();//处理返回的数据
             PeListResponse peListResponse = com.alibaba.fastjson.JSONObject.parseObject(responseData, PeListResponse.class);
-            int averagePe = calculatorAveragePe(peListResponse.getData().getItems());
+            float averagePe = calculatorAveragePe(peListResponse.getData().getItems());
             if (averagePe == 0) {
                 //如果当天没有数据则去请求前一天的数据
                 Log.d("yue.huang",day+":当天pe数据为空，获取前一天数据");
@@ -190,10 +192,10 @@ public class PEChartActivity extends Activity {
     }
 
 
-    private int calculatorAveragePe(List<List<String>> list){
+    private float calculatorAveragePe(List<List<String>> list){
         if(list.size() == 0){return 0;}
         int size = 0;
-        double total = 0;
+        float total = 0;
         if(!indexListString.toString().isEmpty()){
             for (List<String> item : list){
                 if(indexListString.toString().contains(item.get(0)) && item.get(1)!=null){
@@ -203,7 +205,7 @@ public class PEChartActivity extends Activity {
             }
         }else {
             for (List<String> item : list){
-                if(!item.get(0).startsWith("300") && item.get(1)!=null){
+                if(!item.get(0).startsWith("300") && item.get(1)!=null && Double.parseDouble(item.get(1))<300){
                     size++;
                     total+=Double.parseDouble(item.get(1));
                 }
@@ -211,7 +213,7 @@ public class PEChartActivity extends Activity {
         }
 
         Log.d("yue.huang","sizesizesize:"+size);
-        return (int)(total/size);
+        return (total/size/2f);
     }
 
 
@@ -249,7 +251,7 @@ public class PEChartActivity extends Activity {
         line.setPointColor(Color.parseColor("#FF8F59"));//设置节点颜色
         List<PointValue> values = new ArrayList<PointValue>();
         for (int j = 0; j< peList.size(); ++j) {
-            values.add(new PointValue(j, (int)peList.get(j)));//添加数据点
+            values.add(new PointValue(j, (float)peList.get(j)));//添加数据点
         }
         line.setValues(values);
         lines.add(line);
@@ -258,7 +260,7 @@ public class PEChartActivity extends Activity {
         //y轴
         Axis axisY = new Axis().setHasLines(true);
         List<AxisValue> axisYValues = new ArrayList<AxisValue>();
-        for(int m = 0;m<300;m+=20){
+        for(int m = 15;m<55;m+=5){
             axisYValues.add(new AxisValue(m).setLabel(""+m));
         }
         axisY.setValues(axisYValues);
@@ -290,7 +292,7 @@ public class PEChartActivity extends Activity {
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画
         Viewport v = new Viewport(chartView.getMaximumViewport());
-        v.bottom = 0f;
+        v.bottom = 15f;
         v.top = maxPe;
         //固定Y轴的范围,如果没有这个,Y轴的范围会根据数据的最大值和最小值决定,
         chartView.setMaximumViewport(v);

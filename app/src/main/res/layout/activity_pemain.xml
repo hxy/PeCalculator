@@ -31,7 +31,7 @@
         android:id="@+id/target_month"
         android:layout_width="200dp"
         android:layout_height="50dp"
-        android:text="03 06 09 12"
+        android:text="01 02 03 04 05 06 07 08 09 10 11 12"
         android:textSize="18sp"
         android:textColor="@color/colorPrimaryDark"
         android:gravity="center" />

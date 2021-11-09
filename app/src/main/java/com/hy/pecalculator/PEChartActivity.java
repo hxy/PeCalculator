@@ -53,10 +53,10 @@ public class PEChartActivity extends Activity {
     //成分股列表
     private StringBuilder indexListString = new StringBuilder();
     private String indexType = IndexType.ALL.value;
-    private int indexRequestDepth = 0;
     private Map<String,Double> codeWightMap = new HashMap();
     private float maxPe = 0;
     private boolean haveWeight = false;
+    private boolean useOldData = true;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +65,7 @@ public class PEChartActivity extends Activity {
         progressBar = findViewById(R.id.progress_bar);
         indexType = getIntent().getStringExtra("index_type");
         haveWeight = getIntent().getBooleanExtra("have_weight",false);
+        useOldData = getIntent().getBooleanExtra("use_old_data",true);
         Log.d("yue.huang","加权："+haveWeight);
         start(indexType);
     }
@@ -87,7 +88,7 @@ public class PEChartActivity extends Activity {
         }else {
             for(String month:targetMonths){
                 requestIndexCompositionList(type,month);
-                if(indexListString.toString().isEmpty()){Log.d("yue.huang","continue:"+month);continue;}
+                if(indexListString.toString().isEmpty()){Log.d("yue.huang","跳过:"+month);continue;}
                 else {requestPEAndCalculator(month);}
             }
         }
@@ -101,17 +102,17 @@ public class PEChartActivity extends Activity {
      */
     private void requestIndexCompositionList(String code,String day){
         if(code == null){return;}
-        indexListString.delete(0,indexListString.length());
-        codeWightMap.clear();
         try {
-            Thread.sleep(500);
+            Thread.sleep(6000);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json;charset=utf-8");
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("api_name", "index_weight");
             jsonObject.put("token", "38b16e9e9a798416bcf0946e9fa36aa77281c3adbcfdc33f1d2cddb8");
             JSONObject params = new JSONObject();
-            params.put("trade_date", day);
+            String startDay = day.substring(0,day.length()-2)+"01";
+            params.put("start_date", startDay);
+            params.put("end_date", day);
             params.put("index_code",code);
             jsonObject.put("params", params);
             JSONArray fields = new JSONArray();
@@ -126,23 +127,23 @@ public class PEChartActivity extends Activity {
             Response response = client.newCall(request).execute();//发送请求获取返回数据
             String responseData = response.body().string();//处理返回的数据
             IndexListResponse indexListResponse = com.alibaba.fastjson.JSONObject.parseObject(responseData, IndexListResponse.class);
-            if (indexListResponse.getData().getItems().size() == 0) {
-                if(indexRequestDepth<5){
-                    //如果当天没有数据则去请求前一天的数据
-                    Log.d("yue.huang",day+":当天指数成分数据为空，获取前一天数据");
-                    indexRequestDepth++;
-                    requestIndexCompositionList(code,moveForwardOneDay(day));
+            if (indexListResponse.getData() ==null || indexListResponse.getData().getItems().size() == 0) {
+                if (useOldData){
+                    Log.d("yue.huang",day+":当月指数成分数据为空，使用上月数据");
                 }else {
-                    indexRequestDepth = 0;
-                    return;
+                    Log.d("yue.huang",day+":当月指数成分数据为空，跳过");
+                    indexListString.delete(0,indexListString.length());
+                    codeWightMap.clear();
                 }
             }else {
+                indexListString.delete(0,indexListString.length());
+                codeWightMap.clear();
                 for (List<String> item:indexListResponse.getData().getItems()){
                     codeWightMap.put(item.get(0),Double.parseDouble(item.get(1)));
                     indexListString.append(item.get(0));
                 }
             }
-//            Log.d("yue.huang",day+":"+indexListString.toString());
+            Log.d("yue.huang",day+":"+indexListString.toString());
         }catch (Exception e){
             e.printStackTrace();
         }

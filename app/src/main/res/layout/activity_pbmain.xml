@@ -1,51 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center">
-
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:gravity="center"
-        android:layout_marginBottom="50dp">
-        <TextView
-            android:id="@+id/start_month"
+        android:orientation="vertical">
+
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="50dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/start_month"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="40dp"
+                android:text="开始月份"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/end_month"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="结束月份"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/target_month"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:text="01 02 03 04 05 06 07 08 09 10 11 12"
+            android:textColor="@color/colorPrimaryDark"
             android:textSize="18sp"
-            android:text="开始月份"
-            android:layout_marginRight="40dp"/>
-        <TextView
-            android:id="@+id/end_month"
+            android:layout_marginBottom="10dp"/>
+
+        <CheckBox
+            android:id="@+id/use_old_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="结束月份" />
+            android:text="指数是否使用旧成分数据"
+            android:layout_marginBottom="10dp"/>
+
+        <Spinner
+            android:id="@+id/index_type"
+            android:layout_width="200dp"
+            android:layout_height="50dp" />
+
+        <TextView
+            android:id="@+id/btn_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="开始"
+            android:textSize="18sp" />
+
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/target_month"
-        android:layout_width="200dp"
-        android:layout_height="50dp"
-        android:text="01 02 03 04 05 06 07 08 09 10 11 12"
-        android:textSize="18sp"
-        android:textColor="@color/colorPrimaryDark"
-        android:gravity="center" />
-
-    <Spinner android:id="@+id/index_type"
-        android:layout_width="200dp"
-        android:layout_height="50dp" />
-
     <TextView
-        android:id="@+id/btn_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:text="开始"
-        android:layout_centerHorizontal="true" />
-
-</LinearLayout>
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:text="各指数开始时间:\n500 2007.01\n红利 2018.12\n传媒 2014.11\n环保 2015.05\n消费 2011.09\n医药 2011.09\n金融 2011.09\n信息 2011.09"
+        android:textSize="10sp"
+        android:layout_marginRight="10dp"/>
+</RelativeLayout>

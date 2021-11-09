@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Spinner;
@@ -32,6 +33,7 @@ public class PEMainActivity extends Activity {
     private String selectedIndexType = "all";
     private RadioButton rbHaveWeight;
     private RadioButton rbNoWeight;
+    private CheckBox cbUseOldData;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,7 +64,8 @@ public class PEMainActivity extends Activity {
         });
         targetMonthET = findViewById(R.id.target_month);
         spinner = findViewById(R.id.index_type);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,new String[]{IndexType.ALL.type,IndexType.HS300.type,IndexType.ZZ500.type,IndexType.ZZ800.type,IndexType.ZZ1000.type});
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,new String[]{IndexType.ALL.type,IndexType.HS300.type,IndexType.ZZ500.type,
+                IndexType.ZZHB.type,IndexType.ZZCM.type,IndexType.ZZHL.type,IndexType.QZXF.type,IndexType.QZYY.type,IndexType.QZJR.type,IndexType.QZXX.type,IndexType.ZZ800.type,IndexType.ZZ1000.type});
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -72,8 +75,15 @@ public class PEMainActivity extends Activity {
                     case 0:selectedIndexType = IndexType.ALL.value;break;
                     case 1:selectedIndexType = IndexType.HS300.value;break;
                     case 2:selectedIndexType = IndexType.ZZ500.value;break;
-                    case 3:selectedIndexType = IndexType.ZZ800.value;break;
-                    case 4:selectedIndexType = IndexType.ZZ1000.value;break;
+                    case 3:selectedIndexType = IndexType.ZZHB.value;break;
+                    case 4:selectedIndexType = IndexType.ZZCM.value;break;
+                    case 5:selectedIndexType = IndexType.ZZHL.value;break;
+                    case 6:selectedIndexType = IndexType.QZXF.value;break;
+                    case 7:selectedIndexType = IndexType.QZYY.value;break;
+                    case 8:selectedIndexType = IndexType.QZJR.value;break;
+                    case 9:selectedIndexType = IndexType.QZXX.value;break;
+                    case 10:selectedIndexType = IndexType.ZZ800.value;break;
+                    case 11:selectedIndexType = IndexType.ZZ1000.value;break;
                 }
                 Log.d("yue.huang",position+":"+selectedIndexType);
             }
@@ -86,6 +96,8 @@ public class PEMainActivity extends Activity {
 
         rbHaveWeight = findViewById(R.id.have_weight);
         rbNoWeight = findViewById(R.id.no_weight);
+        cbUseOldData = findViewById(R.id.use_old_data);
+        cbUseOldData.setChecked(true);
         rbNoWeight.setChecked(true);
 
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
@@ -106,6 +118,7 @@ public class PEMainActivity extends Activity {
                     intent.putStringArrayListExtra("month_list",targetList);
                     intent.putExtra("index_type",selectedIndexType);
                     intent.putExtra("have_weight",rbHaveWeight.isChecked());
+                    intent.putExtra("use_old_data", cbUseOldData.isChecked());
                     startActivity(intent);
                 }
             }

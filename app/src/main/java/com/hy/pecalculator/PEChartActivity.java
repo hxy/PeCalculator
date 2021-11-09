@@ -57,6 +57,11 @@ public class PEChartActivity extends Activity {
     private float maxPe = 0;
     private boolean haveWeight = false;
     private boolean useOldData = true;
+
+    private int chatMinNum = 15;
+    private int chatMaxNum = 55;
+    private int chatIntervalNum = 5;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +71,11 @@ public class PEChartActivity extends Activity {
         indexType = getIntent().getStringExtra("index_type");
         haveWeight = getIntent().getBooleanExtra("have_weight",false);
         useOldData = getIntent().getBooleanExtra("use_old_data",true);
+        if(IndexType.ZZHL.value.equals(indexType)){
+            chatMinNum = 5;
+            chatMaxNum = 15;
+            chatIntervalNum = 1;
+        }
         Log.d("yue.huang","加权："+haveWeight);
         start(indexType);
     }
@@ -261,7 +271,7 @@ public class PEChartActivity extends Activity {
         //y轴
         Axis axisY = new Axis().setHasLines(true);
         List<AxisValue> axisYValues = new ArrayList<AxisValue>();
-        for(int m = 15;m<55;m+=5){
+        for(int m = chatMinNum;m<chatMaxNum;m+=chatIntervalNum){
             axisYValues.add(new AxisValue(m).setLabel(""+m));
         }
         axisY.setValues(axisYValues);
@@ -293,7 +303,7 @@ public class PEChartActivity extends Activity {
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画
         Viewport v = new Viewport(chartView.getMaximumViewport());
-        v.bottom = 15f;
+        v.bottom = chatMinNum;
         v.top = maxPe;
         //固定Y轴的范围,如果没有这个,Y轴的范围会根据数据的最大值和最小值决定,
         chartView.setMaximumViewport(v);

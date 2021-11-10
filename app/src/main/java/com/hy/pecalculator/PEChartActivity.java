@@ -75,6 +75,11 @@ public class PEChartActivity extends Activity {
             chatMinNum = 5;
             chatMaxNum = 15;
             chatIntervalNum = 1;
+        }else if(IndexType.ZZHB.value.equals(indexType)){
+            chatMinNum = 5;
+        }else if(IndexType.QZJR.value.equals(indexType)){
+            chatMinNum = 5;
+            chatMaxNum = 30;
         }
         Log.d("yue.huang","加权："+haveWeight);
         start(indexType);

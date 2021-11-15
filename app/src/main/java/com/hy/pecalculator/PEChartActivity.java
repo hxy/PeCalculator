@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
@@ -50,16 +51,18 @@ public class PEChartActivity extends Activity {
     private ArrayList peList = new ArrayList<Integer>();
     private LineChartView chartView;
     private ProgressBar progressBar;
+    private TextView tvPrint;
     //成分股列表
     private StringBuilder indexListString = new StringBuilder();
     private String indexType = IndexType.ALL.value;
     private Map<String,Double> codeWightMap = new HashMap();
     private float maxPe = 0;
+    private float minPe = 0;
     private boolean haveWeight = false;
     private boolean useOldData = true;
 
     private int chatMinNum = 15;
-    private int chatMaxNum = 55;
+    private int chatMaxNum = 65;
     private int chatIntervalNum = 5;
 
     @Override
@@ -68,19 +71,49 @@ public class PEChartActivity extends Activity {
         setContentView(R.layout.activity_chart);
         targetMonths = getIntent().getStringArrayListExtra("month_list").toArray(new String[]{});
         progressBar = findViewById(R.id.progress_bar);
+        tvPrint = findViewById(R.id.tv_print);
         indexType = getIntent().getStringExtra("index_type");
         haveWeight = getIntent().getBooleanExtra("have_weight",false);
         useOldData = getIntent().getBooleanExtra("use_old_data",true);
-        if(IndexType.ZZHL.value.equals(indexType)){
-            chatMinNum = 5;
-            chatMaxNum = 15;
-            chatIntervalNum = 1;
-        }else if(IndexType.ZZHB.value.equals(indexType)){
-            chatMinNum = 5;
-        }else if(IndexType.QZJR.value.equals(indexType)){
-            chatMinNum = 5;
-            chatMaxNum = 30;
+        if(haveWeight){
+            if(IndexType.ZZCM.value.equals(indexType)){
+                chatMinNum = 40;
+                chatMaxNum = 240;
+                chatIntervalNum = 10;
+            }else if(IndexType.ZZ500.value.equals(indexType)){
+                chatMinNum = 4;
+                chatMaxNum = 20;
+                chatIntervalNum = 2;
+            }else if(IndexType.ZZHL.value.equals(indexType)){
+                chatMinNum = 5;
+                chatMaxNum = 30;
+            }else if(IndexType.ZZHB.value.equals(indexType)){
+                chatMinNum = 20;
+                chatMaxNum = 130;
+                chatIntervalNum = 10;
+            }else if(IndexType.QZYY.value.equals(indexType)){
+                chatMinNum = 10;
+                chatMaxNum = 80;
+            }else if(IndexType.QZJR.value.equals(indexType)){
+                chatMinNum = 5;
+                chatMaxNum = 35;
+            }else if(IndexType.QZXX.value.equals(indexType)){
+                chatMinNum = 5;
+                chatMaxNum = 50;
+            }
+        }else {
+            if(IndexType.ZZHL.value.equals(indexType)){
+                chatMinNum = 5;
+                chatMaxNum = 15;
+                chatIntervalNum = 1;
+            }else if(IndexType.ZZHB.value.equals(indexType)){
+                chatMinNum = 5;
+            }else if(IndexType.QZJR.value.equals(indexType)){
+                chatMinNum = 5;
+                chatMaxNum = 30;
+            }
         }
+
         Log.d("yue.huang","加权："+haveWeight);
         start(indexType);
     }
@@ -199,6 +232,15 @@ public class PEChartActivity extends Activity {
                 if(averagePe>maxPe){
                     maxPe = averagePe;
                 }
+                if(minPe>averagePe){
+                    minPe = averagePe;
+                }
+                tvPrint.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvPrint.setText((day));
+                    }
+                });
                 Log.d("yue.huang", day + ":averagePe:" + averagePe);
             }
 
@@ -216,7 +258,7 @@ public class PEChartActivity extends Activity {
             for (List<String> item : list){
                 if(indexListString.toString().contains(item.get(0)) && item.get(1)!=null && Double.parseDouble(item.get(1))<300){
                     size++;
-                    total+=Double.parseDouble(item.get(1))*(haveWeight?codeWightMap.get(item.get(0))*2:1);
+                    total+=Double.parseDouble(item.get(1))*(haveWeight?codeWightMap.get(item.get(0)):1);
                 }
             }
         }else {
@@ -303,7 +345,7 @@ public class PEChartActivity extends Activity {
         chartView = findViewById(R.id.chart);
         chartView.setLineChartData(data);
         chartView.setInteractive(true);
-        chartView.setZoomType(ZoomType.HORIZONTAL);
+        chartView.setZoomType(ZoomType.HORIZONTAL_AND_VERTICAL);
         chartView.setMaxZoom((float) targetMonths.length);//最大方法比例
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画
@@ -321,6 +363,7 @@ public class PEChartActivity extends Activity {
             public void run() {
                 chartView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
+                tvPrint.setVisibility(View.GONE);
             }
         });
     }

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
@@ -47,6 +48,7 @@ public class PBChartActivity extends Activity {
     private ArrayList peList = new ArrayList<Integer>();
     private LineChartView chartView;
     private ProgressBar progressBar;
+    private TextView tvPrint;
     //成分股列表
     private StringBuilder indexListString = new StringBuilder();
     private String indexType = IndexType.ALL.value;
@@ -63,6 +65,7 @@ public class PBChartActivity extends Activity {
         setContentView(R.layout.activity_chart);
         targetMonths = getIntent().getStringArrayListExtra("month_list").toArray(new String[]{});
         progressBar = findViewById(R.id.progress_bar);
+        tvPrint = findViewById(R.id.tv_print);
         indexType = getIntent().getStringExtra("index_type");
         useOldData = getIntent().getBooleanExtra("use_old_data",true);
         if(IndexType.ZZHL.value.equals(indexType)){
@@ -191,6 +194,12 @@ public class PBChartActivity extends Activity {
                 if(averagePb>maxPe){
                     maxPe = averagePb;
                 }
+                tvPrint.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvPrint.setText(day);
+                    }
+                });
                 Log.d("yue.huang", day + ":averagePb:" + averagePb);
             }
 
@@ -311,6 +320,7 @@ public class PBChartActivity extends Activity {
             public void run() {
                 chartView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
+                tvPrint.setVisibility(View.GONE);
             }
         });
     }

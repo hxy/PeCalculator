@@ -345,7 +345,7 @@ public class PEChartActivity extends Activity {
         chartView = findViewById(R.id.chart);
         chartView.setLineChartData(data);
         chartView.setInteractive(true);
-        chartView.setZoomType(ZoomType.HORIZONTAL_AND_VERTICAL);
+        chartView.setZoomType(ZoomType.HORIZONTAL);
         chartView.setMaxZoom((float) targetMonths.length);//最大方法比例
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画

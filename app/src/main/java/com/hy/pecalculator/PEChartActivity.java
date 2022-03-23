@@ -151,6 +151,7 @@ public class PEChartActivity extends Activity {
     private void requestIndexCompositionList(String code,String day){
         if(code == null){return;}
         try {
+            //接口限制每分钟最多10次
             Thread.sleep(6000);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json;charset=utf-8");
@@ -200,7 +201,8 @@ public class PEChartActivity extends Activity {
     private void requestPEAndCalculator(final String day){
         if(day == null){return;}
         try {
-            Thread.sleep(500);
+            //接口限制每分钟最多50次
+            Thread.sleep(1000);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json");
             JSONObject jsonObject = new JSONObject();

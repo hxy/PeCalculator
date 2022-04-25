@@ -202,7 +202,7 @@ public class PEChartActivity extends Activity {
         if(day == null){return;}
         try {
             //接口限制每分钟最多50次
-            Thread.sleep(1000);
+            Thread.sleep(1500);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             MediaType mediaType = MediaType.parse("application/json");
             JSONObject jsonObject = new JSONObject();

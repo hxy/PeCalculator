@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="#272727">
+    android:background="#272727"
+    android:keepScreenOn="true">
 
     <lecho.lib.hellocharts.view.LineChartView
         android:id="@+id/chart"

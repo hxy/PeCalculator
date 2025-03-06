@@ -62,7 +62,7 @@ public class PBMainActivity extends Activity {
         targetMonthET = findViewById(R.id.target_month);
         spinner = findViewById(R.id.index_type);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,new String[]{IndexType.ALL.type,IndexType.HS300.type,IndexType.ZZ500.type,
-                IndexType.ZZHB.type,IndexType.ZZCM.type,IndexType.ZZHL.type,IndexType.QZXF.type,IndexType.QZYY.type,IndexType.QZJR.type,IndexType.QZXX.type,IndexType.ZZ800.type,IndexType.ZZ1000.type});
+                IndexType.SWHB.type,IndexType.SWCM.type,IndexType.SZXF.type,IndexType.SZYY.type,IndexType.SZJR.type,IndexType.SZXX.type});
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -72,15 +72,12 @@ public class PBMainActivity extends Activity {
                     case 0:selectedIndexType = IndexType.ALL.value;break;
                     case 1:selectedIndexType = IndexType.HS300.value;break;
                     case 2:selectedIndexType = IndexType.ZZ500.value;break;
-                    case 3:selectedIndexType = IndexType.ZZHB.value;break;
-                    case 4:selectedIndexType = IndexType.ZZCM.value;break;
-                    case 5:selectedIndexType = IndexType.ZZHL.value;break;
-                    case 6:selectedIndexType = IndexType.QZXF.value;break;
-                    case 7:selectedIndexType = IndexType.QZYY.value;break;
-                    case 8:selectedIndexType = IndexType.QZJR.value;break;
-                    case 9:selectedIndexType = IndexType.QZXX.value;break;
-                    case 10:selectedIndexType = IndexType.ZZ800.value;break;
-                    case 11:selectedIndexType = IndexType.ZZ1000.value;break;
+                    case 3:selectedIndexType = IndexType.SWHB.value;break;
+                    case 4:selectedIndexType = IndexType.SWCM.value;break;
+                    case 6:selectedIndexType = IndexType.SZXF.value;break;
+                    case 7:selectedIndexType = IndexType.SZYY.value;break;
+                    case 8:selectedIndexType = IndexType.SZJR.value;break;
+                    case 9:selectedIndexType = IndexType.SZXX.value;break;
                 }
                 Log.d("yue.huang",position+":"+selectedIndexType);
             }

@@ -68,11 +68,7 @@ public class PBChartActivity extends Activity {
         tvPrint = findViewById(R.id.tv_print);
         indexType = getIntent().getStringExtra("index_type");
         useOldData = getIntent().getBooleanExtra("use_old_data",true);
-        if(IndexType.ZZHL.value.equals(indexType)){
-            chatMinNum = 15;
-            chatMaxNum = 25;
-            chatIntervalNum = 1;
-        }else if(IndexType.QZJR.value.equals(indexType)) {
+        if(IndexType.SZJR.value.equals(indexType)) {
             chatMinNum = 5;
         }
         start(indexType);

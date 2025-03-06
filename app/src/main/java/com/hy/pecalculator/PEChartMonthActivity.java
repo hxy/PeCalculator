@@ -14,7 +14,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import lecho.lib.hellocharts.gesture.ContainerScrollType;
@@ -34,14 +37,11 @@ import okhttp3.Response;
 /**
  * Created by yue.huang
  * on 2020-04-15
- * 接口地址：https://www.mairui.club/hsdata
+ * 计算某一月内数据
  */
-public class PEChartActivity extends Activity {
+public class PEChartMonthActivity extends Activity {
 
-    private String[] targetMonths = {"2000-06","2000-12","2001-06","2001-12","2002-06","2002-12","2003-06","2003-12","2004-06","2004-12","2005-06","2005-12"
-            ,"2006-06","2006-12","2007-06","2007-12","2008-06","2008-12","2009-06","2009-12","2010-06","2010-12","2011-06","2011-12","2012-06"
-            ,"2012-12","2013-06","2013-12","2014-06","2014-12","2015-06","2015-12","2016-06","2016-12","2017-06","2017-12","2018-06","2018-12"
-            ,"2019-06","2019-12"};
+    private String targetMonth;
     private ArrayList<String> realDays = new ArrayList<>();
     private ArrayList peList = new ArrayList<Integer>();
     private LineChartView chartView;
@@ -57,13 +57,14 @@ public class PEChartActivity extends Activity {
 
     private static final String LICENCE = "b997d4403688d5e66a";
     private static final String REAL_LICENCE = "110CC0CE-4FFF-4F3B-BE85-AEDA71F2CAC6";
+    private static final String REAL_LICENCE1 = "4AA49BF6-F1F1-4C14-9F45-FECF2859080B";
     private static final int MAX_PE = 200;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chart);
-        targetMonths = getIntent().getStringArrayListExtra("month_list").toArray(new String[]{});
+        targetMonth = getIntent().getStringExtra("month");
         progressBar = findViewById(R.id.progress_bar);
         tvPrint = findViewById(R.id.tv_print);
         indexType = getIntent().getStringExtra("index_type");
@@ -103,9 +104,9 @@ public class PEChartActivity extends Activity {
                     getIndexGPList(type);
                 }
                 //请求所有股票在计算时间段内每月底的收盘价格
-                getAllGPMonthPrice(targetMonths[0]+"-01",targetMonths[targetMonths.length-1]+"-01");
+                getAllGPDailyPrice(targetMonth+"-01",getLastDayInMonth(targetMonth));
                 //请求所有股票在计算时间段内每年每季度的每股收益
-                getProfitData(targetMonths[0],targetMonths[targetMonths.length-1]);
+                getProfitData(targetMonth+"-01",getLastDayInMonth(targetMonth));
                 //计算pe
                 startCalculatorAveragePe();
                 //显示表格
@@ -113,7 +114,6 @@ public class PEChartActivity extends Activity {
 
             }
         }).start();
-
     }
 
 
@@ -168,7 +168,7 @@ public class PEChartActivity extends Activity {
         chartView.setLineChartData(data);
         chartView.setInteractive(true);
         chartView.setZoomType(ZoomType.HORIZONTAL);
-        chartView.setMaxZoom((float) targetMonths.length);//最大方法比例
+        chartView.setMaxZoom((float) realDays.size());//最大方法比例
         chartView.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
         chartView.setValueSelectionEnabled(true);//设置节点点击后动画
         Viewport v = new Viewport(chartView.getMaximumViewport());
@@ -178,7 +178,7 @@ public class PEChartActivity extends Activity {
         chartView.setMaximumViewport(v);
         //这2个属性的设置一定要在lineChart.setMaximumViewport(v);这个方法之后,不然显示的坐标数据是不能左右滑动查看更多数据的
         v.left = 0f;
-        v.right = targetMonths.length;
+        v.right = realDays.size();
         chartView.setCurrentViewport(v);
         chartView.post(new Runnable() {
             @Override
@@ -235,39 +235,39 @@ public class PEChartActivity extends Activity {
     }
 
     /**
-     * 保存每个股票从起始日期到结束日期的每月底的价格
+     * 保存每个股票从起始日期到结束日期的每天的价格
      */
-    private List<GpDailyPriceListBean> gpMonthPriceListBeanList = new ArrayList<>();
-    public void getAllGPMonthPrice(String startDay, String endDay){
+    private List<GpDailyPriceListBean> gpDailyPriceListBeanList = new ArrayList<>();
+    public void getAllGPDailyPrice(String startDay, String endDay){
         for(GpBean gpBean : allGPList){
             //循环请求每个股票，在时间段内每月底的价格
-            List<GpDailyPriceListBean.DailyPriceBean> monthPriceBeanList = getGPMonthPrice(gpBean.dm,startDay,endDay);
-            if(monthPriceBeanList!=null){
+            List<GpDailyPriceListBean.DailyPriceBean> dailyPriceBeanList = getGPDailyPrice(gpBean.dm,startDay,endDay);
+            if(dailyPriceBeanList!=null){
                 //保存起来
                 GpDailyPriceListBean allMonthPriceListBean = new GpDailyPriceListBean();
                 allMonthPriceListBean.code = gpBean.dm;
                 allMonthPriceListBean.name = gpBean.mc;
-                allMonthPriceListBean.priceBeanList.addAll(monthPriceBeanList);
-                gpMonthPriceListBeanList.add(allMonthPriceListBean);
+                allMonthPriceListBean.priceBeanList.addAll(dailyPriceBeanList);
+                gpDailyPriceListBeanList.add(allMonthPriceListBean);
                 if(realDays.isEmpty()){
                     //将真实的月底最后一个交易日期保存起来
-                    for (GpDailyPriceListBean.DailyPriceBean priceBean:monthPriceBeanList){
+                    for (GpDailyPriceListBean.DailyPriceBean priceBean:dailyPriceBeanList){
                         realDays.add(priceBean.d);
                     }
                 }
-                print("获取股票每月底价格集合："+gpBean.dm+","+gpBean.mc+",共"+monthPriceBeanList.size()+"个月");
-                Log.d("yue.huang","获取股票每月底价格集合："+gpBean.dm+","+gpBean.mc+",共"+monthPriceBeanList.size()+"个月");
+                print("请求股票"+startDay+"月每天价格集合："+gpBean.dm+","+gpBean.mc+",共"+dailyPriceBeanList.size()+"天");
+                Log.d("yue.huang","请求股票"+startDay+"月每天价格集合："+gpBean.dm+","+gpBean.mc+",共"+dailyPriceBeanList.size()+"天");
             }
         }
     }
 
-    private List<GpDailyPriceListBean.DailyPriceBean> getGPMonthPrice(String code, String startDay, String endDay){
+    private List<GpDailyPriceListBean.DailyPriceBean> getGPDailyPrice(String code, String startDay, String endDay){
         try {
             //一分钟300次限制
             Thread.sleep(250);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
-                    .url("http://api.mairui.club/hszbc/fsjy/"+code+"/mq/"+startDay+"/"+endDay+"/"+LICENCE)
+                    .url("http://api.mairui.club/hszbc/fsjy/"+code+"/dq/"+startDay+"/"+endDay+"/"+LICENCE)
                     .get()
                     .build();
             Response response = client.newCall(request).execute();//发送请求获取返回数据
@@ -355,8 +355,8 @@ public class PEChartActivity extends Activity {
             List<GpProfitBean.Profit> gpProfitBeanList = new Gson().fromJson(responseData,type);
             return gpProfitBeanList;
         } catch (Exception e) {
-            e.printStackTrace();
             print("获取股票股票盈利接口出错");
+            e.printStackTrace();
             return null;
         }
     }
@@ -371,7 +371,7 @@ public class PEChartActivity extends Activity {
             //循环计算范围内的每一天
             int totalPe=0;
             int totalSize=0;
-            for (GpDailyPriceListBean dailyPriceListBean : gpMonthPriceListBeanList){
+            for (GpDailyPriceListBean dailyPriceListBean : gpDailyPriceListBeanList){
                 double price = 0;//收盘价
                 double mgsy = 10000;//每股收益，设置一个特殊的初始值用来区分一般情况
                 String log="计算每个股票pe："+day+",code:"+dailyPriceListBean.code+",name:"+dailyPriceListBean.name;
@@ -620,6 +620,34 @@ public class PEChartActivity extends Activity {
                 minPe = averagePe;
             }
             Log.d("yue.huang",log1);
+        }
+    }
+
+    /**
+     * 获取任意月中最后一天
+     * @param month yyyy-MM格式的月份
+     */
+    private String getLastDayInMonth(String month){
+        try {
+            SimpleDateFormat sdfYM = new SimpleDateFormat("yyyy-MM");
+            SimpleDateFormat sdfYMD = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = sdfYM.parse(month);
+
+            Calendar instance = Calendar.getInstance();
+            instance.setTime(date);
+            if(Calendar.getInstance().get(Calendar.YEAR) == instance.get(Calendar.YEAR)
+                    && Calendar.getInstance().get(Calendar.MONTH) == instance.get(Calendar.MONTH)){
+                //只有传入的时间不是当前月份时才返回传入月份的最后一天，如果传入的月份是当前月分则返回当前日期
+                return sdfYMD.format(Calendar.getInstance().getTime());
+            }else {
+                instance.add(Calendar.MONTH, 1);//月份+1
+                instance.set(Calendar.DAY_OF_MONTH, 1);//天设为一个月的第一天
+                instance.add(Calendar.DAY_OF_MONTH, -1);//本月最后一天
+                return sdfYMD.format(instance.getTime());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return "";
         }
     }
 

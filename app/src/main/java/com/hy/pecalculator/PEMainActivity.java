@@ -7,9 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,12 +25,8 @@ public class PEMainActivity extends Activity {
     private TextView startTv;
     private TextView endTv;
     private TimePickerView pvTime;
-    private EditText targetMonthET;
     private Spinner spinner;
     private String selectedIndexType = "all";
-    private RadioButton rbHaveWeight;
-    private RadioButton rbNoWeight;
-    private CheckBox cbUseOldData;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,10 +55,9 @@ public class PEMainActivity extends Activity {
                 pvTime.show();
             }
         });
-        targetMonthET = findViewById(R.id.target_month);
         spinner = findViewById(R.id.index_type);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,new String[]{IndexType.ALL.type,IndexType.HS300.type,IndexType.ZZ500.type,
-                IndexType.ZZHB.type,IndexType.ZZCM.type,IndexType.ZZHL.type,IndexType.QZXF.type,IndexType.QZYY.type,IndexType.QZJR.type,IndexType.QZXX.type,IndexType.ZZ800.type,IndexType.ZZ1000.type});
+                IndexType.SWHB.type,IndexType.SWCM.type,IndexType.SZXF.type,IndexType.SZYY.type,IndexType.SZJR.type,IndexType.SZXX.type});
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -75,15 +67,12 @@ public class PEMainActivity extends Activity {
                     case 0:selectedIndexType = IndexType.ALL.value;break;
                     case 1:selectedIndexType = IndexType.HS300.value;break;
                     case 2:selectedIndexType = IndexType.ZZ500.value;break;
-                    case 3:selectedIndexType = IndexType.ZZHB.value;break;
-                    case 4:selectedIndexType = IndexType.ZZCM.value;break;
-                    case 5:selectedIndexType = IndexType.ZZHL.value;break;
-                    case 6:selectedIndexType = IndexType.QZXF.value;break;
-                    case 7:selectedIndexType = IndexType.QZYY.value;break;
-                    case 8:selectedIndexType = IndexType.QZJR.value;break;
-                    case 9:selectedIndexType = IndexType.QZXX.value;break;
-                    case 10:selectedIndexType = IndexType.ZZ800.value;break;
-                    case 11:selectedIndexType = IndexType.ZZ1000.value;break;
+                    case 3:selectedIndexType = IndexType.SWHB.value;break;
+                    case 4:selectedIndexType = IndexType.SWCM.value;break;
+                    case 6:selectedIndexType = IndexType.SZXF.value;break;
+                    case 7:selectedIndexType = IndexType.SZYY.value;break;
+                    case 8:selectedIndexType = IndexType.SZJR.value;break;
+                    case 9:selectedIndexType = IndexType.SZXX.value;break;
                 }
                 Log.d("yue.huang",position+":"+selectedIndexType);
             }
@@ -94,31 +83,16 @@ public class PEMainActivity extends Activity {
             }
         });
 
-        rbHaveWeight = findViewById(R.id.have_weight);
-        rbNoWeight = findViewById(R.id.no_weight);
-        cbUseOldData = findViewById(R.id.use_old_data);
-        cbUseOldData.setChecked(true);
-        rbNoWeight.setChecked(true);
-
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ArrayList<String> targetList = new ArrayList<>();
                 List<String> monthList = getRangeSet(startTv.getText().toString(),endTv.getText().toString());
-                for(String month : monthList){
-                    if(targetMonthET.getText().toString().contains(month.substring(month.length()-2))){
-                        Log.d("yue.huang",getLastDayInMonth(month));
-                        targetList.add(getLastDayInMonth(month));
-                    }
-                }
-                if(targetList.size() == 0){
+                if(monthList.size() == 0){
                     Toast.makeText(PEMainActivity.this,"时间范围有问题",Toast.LENGTH_SHORT).show();
                 }else {
                     Intent intent = new Intent(PEMainActivity.this, PEChartActivity.class);
-                    intent.putStringArrayListExtra("month_list",targetList);
+                    intent.putStringArrayListExtra("month_list",(ArrayList<String>) monthList);
                     intent.putExtra("index_type",selectedIndexType);
-                    intent.putExtra("have_weight",rbHaveWeight.isChecked());
-                    intent.putExtra("use_old_data", cbUseOldData.isChecked());
                     startActivity(intent);
                 }
             }
@@ -128,33 +102,7 @@ public class PEMainActivity extends Activity {
 
 
 
-    /**
-     * 获取任意月中最后一天
-     * @param month yyyy-MM格式的月份
-     */
-    private String getLastDayInMonth(String month){
-        try {
-            SimpleDateFormat sdfYM = new SimpleDateFormat("yyyy-MM");
-            SimpleDateFormat sdfYMD = new SimpleDateFormat("yyyyMMdd");
-            Date date = sdfYM.parse(month);
 
-            Calendar instance = Calendar.getInstance();
-            instance.setTime(date);
-            if(Calendar.getInstance().get(Calendar.YEAR) == instance.get(Calendar.YEAR)
-                    && Calendar.getInstance().get(Calendar.MONTH) == instance.get(Calendar.MONTH)){
-                //只有传入的时间不是当前月份时才返回传入月份的最后一天，如果传入的月份是当前月分则返回当前日期
-                return sdfYMD.format(Calendar.getInstance().getTime());
-            }else {
-                instance.add(Calendar.MONTH, 1);//月份+1
-                instance.set(Calendar.DAY_OF_MONTH, 1);//天设为一个月的第一天
-                instance.add(Calendar.DAY_OF_MONTH, -1);//本月最后一天
-                return sdfYMD.format(instance.getTime());
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-            return "";
-        }
-    }
 
 
 

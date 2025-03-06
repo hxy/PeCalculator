@@ -27,4 +27,5 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.core:core-ktx:1.0.2'
     implementation 'com.contrarywind:Android-PickerView:3.2.7'
+    implementation 'com.google.code.gson:gson:2.11.0'
 }

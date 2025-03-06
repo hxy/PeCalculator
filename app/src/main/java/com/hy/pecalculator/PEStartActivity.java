@@ -8,25 +8,25 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 /**
- * Created by yue.huang
- * on 2020-05-20
+ * Created by hy on 2025-03-01
+ * Describe:
  */
-public class StartActivity extends Activity {
+public class PEStartActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_start);
-        findViewById(R.id.pe_tv).setOnClickListener(new View.OnClickListener() {
+        setContentView(R.layout.activity_pestart);
+        findViewById(R.id.year_tv).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(StartActivity.this, PEStartActivity.class));
+                startActivity(new Intent(PEStartActivity.this,PEMainActivity.class));
             }
         });
 
-        findViewById(R.id.pb_tv).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.month_tv).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(StartActivity.this,PBMainActivity.class));
+                startActivity(new Intent(PEStartActivity.this,PEMonthActivity.class));
             }
         });
     }

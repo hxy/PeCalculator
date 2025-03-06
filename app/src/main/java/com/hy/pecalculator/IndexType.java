@@ -5,8 +5,8 @@ package com.hy.pecalculator;
  * on 2020-04-20
  */
 public enum IndexType {
-    ALL("全市场","all"),HS300("沪深300","000300.SH"),ZZ500("中证500","000905.SH"),ZZ800("中证800","000906.SH"),ZZ1000("中证1000","000852.SH")
-    ,ZZHB("中证环保","000827.SH"),ZZCM("中证传媒","399971.CSI"),ZZHL("中证红利","000922.CSI"),QZXF("全指消费","000990.SH"),QZYY("全指医药","000991.SH"),QZJR("全指金融","000992.SH"),QZXX("全指信息","000993.SH");
+    ALL("全市场","all"),HS300("沪深300","hs300"),ZZ500("中证500","zhishu_000905"), SWHB("申万环保","sw_hb"), SWCM("申万传媒","sw_cm"),
+    SZXF("上证消费","zhishu_000036"), SZYY("上证医药","zhishu_000037"), SZJR("上证金融","zhishu_000038"), SZXX("上证信息","zhishu_000039");
 
     public String value;
     public String type;

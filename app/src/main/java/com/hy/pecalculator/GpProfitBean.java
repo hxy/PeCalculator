@@ -9,12 +9,7 @@ import java.util.List;
  */
 public class GpProfitBean {
     public int year;
-    public List<Profit> seasonOne = new ArrayList<>();
-    public List<Profit> seasonTwo = new ArrayList<>();
-    public List<Profit> seasonThree = new ArrayList<>();
-    public List<Profit> seasonFour = new ArrayList<>();
-
-
+    public List<Profit> profitList = new ArrayList<>();
 
     public static class Profit{
         public String dm;

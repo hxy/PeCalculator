@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
     android:background="#272727"
     android:keepScreenOn="true">
 
@@ -35,5 +34,78 @@
         android:textColor="#fff"
         android:layout_centerInParent="true"
         android:layout_below="@+id/progress_bar"/>
+
+
+    <LinearLayout
+        android:id="@+id/layout_adapt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="top"
+        android:visibility="invisible">
+
+        <EditText
+            android:id="@+id/max_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="10sp"
+            android:hint="表格最大值"
+            android:inputType="number"
+            android:textColorHint="@color/colorPrimary"/>
+
+        <EditText
+            android:id="@+id/min_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColorHint="@color/colorPrimary"
+            android:inputType="number"
+            android:textSize="10sp"
+            android:hint="表格最小值"/>
+
+        <EditText
+            android:id="@+id/inv_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColorHint="@color/colorPrimary"
+            android:inputType="number"
+            android:textSize="10sp"
+            android:hint="间隔"/>
+
+        <TextView
+            android:id="@+id/update_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:text="刷新表格"
+            android:textSize="10sp"/>
+
+        <EditText
+            android:id="@+id/maxpe_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColorHint="@color/colorPrimary"
+            android:inputType="number"
+            android:textSize="10sp"
+            android:hint="最大pe"
+            android:layout_marginStart="20dp"/>
+        <TextView
+            android:id="@+id/recalculate_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:text="重新计算"
+            android:textSize="10sp"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/adapt_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:text="调整"
+        android:layout_alignParentEnd="true"
+        android:textSize="10sp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"/>
 
 </RelativeLayout>

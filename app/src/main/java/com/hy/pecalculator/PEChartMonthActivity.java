@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -38,6 +40,8 @@ import okhttp3.Response;
  * Created by yue.huang
  * on 2020-04-15
  * 计算某一月内数据
+ * 接口地址：https://www.mairui.club/hsdata
+ * licence微信支付交易单号：4200002593202503071646671367
  */
 public class PEChartMonthActivity extends Activity {
 
@@ -55,15 +59,16 @@ public class PEChartMonthActivity extends Activity {
     private int chatMaxNum = 200;
     private int chatIntervalNum = 5;
 
-    private static final String LICENCE = "b997d4403688d5e66a";
-    private static final String REAL_LICENCE = "110CC0CE-4FFF-4F3B-BE85-AEDA71F2CAC6";
-    private static final String REAL_LICENCE1 = "4AA49BF6-F1F1-4C14-9F45-FECF2859080B";
-    private static final int MAX_PE = 200;
+    private static final String TEST_LICENCE = "b997d4403688d5e66a";//测试licence，不限时不限次数，请求接口的数据不全
+    private static final String REAL_LICENCE = "B5EFEAC7-076D-44D2-B211-503B3E37DE0F";//真正licence,共200w次，每分钟20次
+    private static final String FREE_LICENCE = "110CC0CE-4FFF-4F3B-BE85-AEDA71F2CAC6";//测试licence，每天50次，超过不给数据
+    private static int MAX_PE = 200;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chart);
+        initAdapt();
         targetMonth = getIntent().getStringExtra("month");
         progressBar = findViewById(R.id.progress_bar);
         tvPrint = findViewById(R.id.tv_print);
@@ -103,9 +108,9 @@ public class PEChartMonthActivity extends Activity {
                 }else {
                     getIndexGPList(type);
                 }
-                //请求所有股票在计算时间段内每月底的收盘价格
+                //请求所有股票在计算每月内每天的收盘价格
                 getAllGPDailyPrice(targetMonth+"-01",getLastDayInMonth(targetMonth));
-                //请求所有股票在计算时间段内每年每季度的每股收益
+                //请求所有股票在计算时间段内年报每股收益
                 getProfitData(targetMonth+"-01",getLastDayInMonth(targetMonth));
                 //计算pe
                 startCalculatorAveragePe();
@@ -199,7 +204,7 @@ public class PEChartMonthActivity extends Activity {
         try {
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
-                    .url("http://api.mairui.club/hslt/list/"+LICENCE)
+                    .url("http://api.mairui.club/hslt/list/"+REAL_LICENCE)
                     .get()
                     .build();
             Response response = client.newCall(request).execute();//发送请求获取返回数据
@@ -220,7 +225,7 @@ public class PEChartMonthActivity extends Activity {
         try {
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
-                    .url("http://api.mairui.club/hszg/gg/"+indexType+"/"+LICENCE)
+                    .url("http://api.mairui.club/hszg/gg/"+indexType+"/"+REAL_LICENCE)
                     .get()
                     .build();
             Response response = client.newCall(request).execute();//发送请求获取返回数据
@@ -249,8 +254,9 @@ public class PEChartMonthActivity extends Activity {
                 allMonthPriceListBean.name = gpBean.mc;
                 allMonthPriceListBean.priceBeanList.addAll(dailyPriceBeanList);
                 gpDailyPriceListBeanList.add(allMonthPriceListBean);
-                if(realDays.isEmpty()){
-                    //将真实的月底最后一个交易日期保存起来
+                if(dailyPriceBeanList.size()>realDays.size()){
+                    realDays.clear();
+                    //将真实的当月的交易日期保存起来
                     for (GpDailyPriceListBean.DailyPriceBean priceBean:dailyPriceBeanList){
                         realDays.add(priceBean.d);
                     }
@@ -267,7 +273,7 @@ public class PEChartMonthActivity extends Activity {
             Thread.sleep(250);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
-                    .url("http://api.mairui.club/hszbc/fsjy/"+code+"/dq/"+startDay+"/"+endDay+"/"+LICENCE)
+                    .url("http://api.mairui.club/hszbc/fsjy/"+code+"/dq/"+startDay+"/"+endDay+"/"+REAL_LICENCE)
                     .get()
                     .build();
             Response response = client.newCall(request).execute();//发送请求获取返回数据
@@ -277,7 +283,8 @@ public class PEChartMonthActivity extends Activity {
             return dailyPriceBeanList;
         } catch (Exception e) {
             e.printStackTrace();
-            print("获取股票每月底价格集合出错");
+            Log.d("yue.huang","获取股票每天价格集合出错:code"+code+",startDay:"+startDay+",endDay:"+endDay);
+            print("获取股票每天价格集合出错:code"+code+",startDay:"+startDay+",endDay:"+endDay);
             return null;
         }
     }
@@ -297,34 +304,16 @@ public class PEChartMonthActivity extends Activity {
         String[] ends = endDay.split("-");
         int startYear = Integer.parseInt(starts[0]);
         int endYear = Integer.parseInt(ends[0]);
-        //多获取一年的年报数据，防止起始日期的月分在一季度或某只股票在当年数据中找不到盈利情况
+        //多获取一年的年报数据
         startYear -= 1;
-        while (startYear<=endYear){
-            String log = "获取时间段内每年每季度盈利情况";
-            List<GpProfitBean.Profit> profitSeasonOne = getProfitDataReal(startYear,1);
-            List<GpProfitBean.Profit> profitSeasonTwo = getProfitDataReal(startYear,2);
-            List<GpProfitBean.Profit> profitSeasonThree = getProfitDataReal(startYear,3);
+        while (startYear<endYear){
+            String log = "获取时间段内每年年度盈利情况";
             List<GpProfitBean.Profit> profitSeasonFour = getProfitDataReal(startYear,4);
-            if(profitSeasonOne!=null || profitSeasonTwo!=null || profitSeasonThree!=null || profitSeasonFour!=null){
-                log += "，"+startYear;
+            if(profitSeasonFour!=null){
+                log += "，"+startYear+"，年报"+profitSeasonFour.size();
                 GpProfitBean gpProfitBean = new GpProfitBean();
                 gpProfitBean.year = startYear;
-                if(profitSeasonOne!=null){
-                    log += "，一季度"+profitSeasonOne.size();
-                    gpProfitBean.seasonOne.addAll(profitSeasonOne);
-                }
-                if(profitSeasonTwo!=null){
-                    log += "，二季度"+profitSeasonTwo.size();
-                    gpProfitBean.seasonTwo.addAll(profitSeasonTwo);
-                }
-                if(profitSeasonThree!=null){
-                    log += "，三季度"+profitSeasonThree.size();
-                    gpProfitBean.seasonThree.addAll(profitSeasonThree);
-                }
-                if(profitSeasonFour!=null){
-                    log += "，四季度"+profitSeasonFour.size();
-                    gpProfitBean.seasonFour.addAll(profitSeasonFour);
-                }
+                gpProfitBean.profitList.addAll(profitSeasonFour);
                 gpProfitBeanList.add(gpProfitBean);
                 print(log);
                 Log.d("yue.huang",log);
@@ -346,7 +335,7 @@ public class PEChartMonthActivity extends Activity {
             Thread.sleep(3050);
             OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
-                    .url("http://api.mairui.club/hicw/yl/"+year+"/"+season+"/"+LICENCE)
+                    .url("http://api.mairui.club/hicw/yl/"+year+"/"+season+"/"+REAL_LICENCE)
                     .get()
                     .build();
             Response response = client.newCall(request).execute();//发送请求获取返回数据
@@ -355,7 +344,7 @@ public class PEChartMonthActivity extends Activity {
             List<GpProfitBean.Profit> gpProfitBeanList = new Gson().fromJson(responseData,type);
             return gpProfitBeanList;
         } catch (Exception e) {
-            print("获取股票股票盈利接口出错");
+            print("获取股票股票盈利接口出错，year："+year);
             e.printStackTrace();
             return null;
         }
@@ -366,6 +355,7 @@ public class PEChartMonthActivity extends Activity {
      */
     private void startCalculatorAveragePe(){
         print("计算pe中。。。");
+        peList.clear();
         for (String day :realDays){
             String log1="计算当天股票平均pe："+day;
             //循环计算范围内的每一天
@@ -393,194 +383,22 @@ public class PEChartMonthActivity extends Activity {
                     continue;
                 }
 
-                //-----下面获取股票上一季度的每股收益------
+                //-----下面获取股票上一年报的每股收益------
                 String[] days = day.split("-");
                 int year = Integer.parseInt(days[0]);
-                int month = Integer.parseInt(days[1]);
-                int targetYear = year;
-                int targetSeason = 1;
-                if(month<4){
-                    //如果计算的是第一季度，则获取上一年第四季度的每股收益
-                    targetYear = year-1;
-                    targetSeason = 4;
-                    log+=",计算的是第一季度，获取上一年第四季度的每股收益";
-                }else if(month<7){
-                    //如果计算的是第二季度，则获取第一季度的每股收益
-                    targetSeason = 1;
-                    log+=",计算的是第二季度，获取第一季度的每股收益";
-                }else if(month<9){
-                    //如果计算的是第三季度，则获取第二季度的每股收益
-                    targetSeason = 2;
-                    log+=",计算的是第三季度，获取第二季度的每股收益";
-                }else if(month<=12){
-                    //如果计算的是第四季度，则获取第三季度的每股收益
-                    targetSeason = 3;
-                    log+=",计算的是第四季度，获取第三季度的每股收益";
-                }
-                GpProfitBean befYearGpProfitBean=null;
-                if(targetSeason<4){
-                    //如果找的是前三季度的数据，则获取上一年的数据备用，防止找不到当年季度数据的情况
-                    //因为targetSeason==4的情况时获取的本就是上一年的年报数据，所以此情况忽略
-                    for (GpProfitBean gpProfitBean : gpProfitBeanList){
-                        if(targetYear-1 == gpProfitBean.year){
-                            befYearGpProfitBean = gpProfitBean;
-                            break;
-                        }
-                    }
-                    log+="，找的是前三季度的数据,获取上一年的数据备用";
-                }
                 for (GpProfitBean gpProfitBean : gpProfitBeanList){
                     //查找对应年份和季度的盈利数据
-                    if(targetYear == gpProfitBean.year){
-                        if(targetSeason==1){
-                            for (GpProfitBean.Profit profit:gpProfitBean.seasonOne){
-                                //遍历盈利列表，找到对应股票数据
-                                if(profit.dm.equals(dailyPriceListBean.code)){
-                                    mgsy = profit.mgsy;
-                                    log+=",mgsy:"+mgsy;
-                                    break;
-                                }
+                    if((year-1) == gpProfitBean.year){
+                        for (GpProfitBean.Profit profit:gpProfitBean.profitList){
+                            //遍历盈利列表，找到对应股票数据
+                            if(profit.dm.equals(dailyPriceListBean.code)){
+                                mgsy = profit.mgsy;
+                                log+=",mgsy:"+mgsy;
+                                break;
                             }
-                            if(mgsy==10000 && befYearGpProfitBean!=null){
-                                log+="，当年一季度没数据，则使用上年的年报数据";
-                                //当年一季度没数据，则使用上年的年报数据
-                                for (GpProfitBean.Profit profit:befYearGpProfitBean.seasonFour){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            if(mgsy==10000 && befYearGpProfitBean!=null){
-                                log+="，上年年报没数据，则使用上年的三季度数据";
-                                //上年年报没数据，则使用上年的三季度数据，防止年报推迟情况
-                                for (GpProfitBean.Profit profit:befYearGpProfitBean.seasonThree){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            if(mgsy==10000){
-                                log+="，上年三季度也没有数据,不统计改股票数据";
-                            }
-                            //如果上年三季度也没有数据则不统计改股票数据
-                        }else if(targetSeason==2){
-                            for (GpProfitBean.Profit profit:gpProfitBean.seasonTwo){
-                                //遍历盈利列表，找到对应股票数据
-                                if(profit.dm.equals(dailyPriceListBean.code)){
-                                    mgsy = profit.mgsy;
-                                    log+=",mgsy:"+mgsy;
-                                    break;
-                                }
-                            }
-                            if(mgsy==10000){
-                                log+="，当年二季度报没数据，使用当年的一季度数据";
-                                //当年二季度报没数据，则使用当年的一季度数据
-                                for (GpProfitBean.Profit profit:gpProfitBean.seasonOne){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            if(mgsy==10000 && befYearGpProfitBean!=null){
-                                log+="，当年一季度报没数据，使用上年年报数据";
-                                //当年一季度报没数据，则使用上年年报数据
-                                for (GpProfitBean.Profit profit:befYearGpProfitBean.seasonFour){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            //如果上年年报也没有数据则不统计该股票数据
-                            if(mgsy==10000){
-                                log+="，上年年报也没有数据,不统计该股票数据";
-                            }
-                        }else if(targetSeason==3){
-                            for (GpProfitBean.Profit profit:gpProfitBean.seasonThree){
-                                //遍历盈利列表，找到对应股票数据
-                                if(profit.dm.equals(dailyPriceListBean.code)){
-                                    mgsy = profit.mgsy;
-                                    log+=",mgsy:"+mgsy;
-                                    break;
-                                }
-                            }
-                            if(mgsy==10000){
-                                //当年三季度报没数据，则使用当年二季度数据
-                                log+="，当年三季度报没数据，使用当年二季度数据";
-                                for (GpProfitBean.Profit profit:gpProfitBean.seasonTwo){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            if(mgsy==10000){
-                                log+="，当年二季度报没数据，使用当年一季度数据";
-                                //当年二季度报没数据，则使用当年一季度数据
-                                for (GpProfitBean.Profit profit:gpProfitBean.seasonOne){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            if(mgsy==10000 && befYearGpProfitBean!=null){
-                                log+="，当年一季度报没数据，使用上年年度数据";
-                                //当年一季度报没数据，则使用上年年度数据
-                                for (GpProfitBean.Profit profit:befYearGpProfitBean.seasonFour){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            //如果上年年报也没有数据则不统计该股票数据
-                            if(mgsy==10000){
-                                log+="，上年年报也没有数据,不统计该股票数据";
-                            }
-                        }else {
-                            for (GpProfitBean.Profit profit:gpProfitBean.seasonFour){
-                                //遍历盈利列表，找到对应股票数据
-                                if(profit.dm.equals(dailyPriceListBean.code)){
-                                    mgsy = profit.mgsy;
-                                    log+=",mgsy:"+mgsy;
-                                    break;
-                                }
-                            }
-                            if(mgsy==10000){
-                                log+="，上年四季度报没数据，使用上年三季度数据";
-                                //上年年四季度报没数据，则使用上年三季度数据
-                                for (GpProfitBean.Profit profit:gpProfitBean.seasonThree){
-                                    //遍历盈利列表，找到对应股票数据
-                                    if(profit.dm.equals(dailyPriceListBean.code)){
-                                        mgsy = profit.mgsy;
-                                        log+=",mgsy:"+mgsy;
-                                        break;
-                                    }
-                                }
-                            }
-                            if(mgsy==10000){
-                                log+="，上年三季度报也没有数据,不统计该股票数据";
-                            }
-                            //如果当年三季度报也没有数据则不统计该股票数据，因为获取4季度数据时当年targetYear本就是实际时间的上一年
-                            // 所以如果一个股票上一年的年报和三季度报都没有则忽略此股票
+                        }
+                        if(mgsy==10000){
+                            log+="，上年年报没有数据,不统计该股票数据";
                         }
                         break;
                     }
@@ -596,7 +414,7 @@ public class PEChartMonthActivity extends Activity {
                         //处理每股收益等于0和小于0的情况，设置为最大pe处理
                         pe = MAX_PE;
                     }
-                    if(pe>MAX_PE){
+                    if(pe>=MAX_PE){
                         log+=",pe太大，改为最大值";
                         pe=MAX_PE;
                     }
@@ -656,6 +474,49 @@ public class PEChartMonthActivity extends Activity {
             @Override
             public void run() {
                 tvPrint.setText(msg);
+            }
+        });
+    }
+
+
+
+    private void initAdapt(){
+        final LinearLayout layoutAdapt = findViewById(R.id.layout_adapt);
+        final EditText maxEt = findViewById(R.id.max_et);
+        final EditText minEt = findViewById(R.id.min_et);
+        final EditText invEt = findViewById(R.id.inv_et);
+        TextView updateBtn = findViewById(R.id.update_btn);
+        updateBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int max = Integer.parseInt(maxEt.getText().toString());
+                int min = Integer.parseInt(minEt.getText().toString());
+                int inv = Integer.parseInt(invEt.getText().toString());
+                chatMaxNum = max;
+                chatMinNum = min;
+                chatIntervalNum = inv;
+                fullDataToChartAndShow();
+            }
+        });
+
+        final EditText maxpeEt = findViewById(R.id.maxpe_et);
+        findViewById(R.id.recalculate_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MAX_PE = Integer.parseInt(maxpeEt.getText().toString());
+                startCalculatorAveragePe();
+                fullDataToChartAndShow();
+            }
+        });
+
+        findViewById(R.id.adapt_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(layoutAdapt.getVisibility()!=View.VISIBLE){
+                    layoutAdapt.setVisibility(View.VISIBLE);
+                }else {
+                    layoutAdapt.setVisibility(View.INVISIBLE);
+                }
             }
         });
     }

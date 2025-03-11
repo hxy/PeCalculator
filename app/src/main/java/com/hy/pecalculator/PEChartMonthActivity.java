@@ -3,8 +3,10 @@ package com.hy.pecalculator;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -19,8 +21,10 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import lecho.lib.hellocharts.gesture.ContainerScrollType;
 import lecho.lib.hellocharts.gesture.ZoomType;
@@ -44,7 +48,7 @@ import okhttp3.Response;
  * licence微信支付交易单号：4200002593202503071646671367
  */
 public class PEChartMonthActivity extends Activity {
-
+    private OkHttpClient okHttpClient;
     private String targetMonth;
     private ArrayList<String> realDays = new ArrayList<>();
     private ArrayList peList = new ArrayList<Integer>();
@@ -62,12 +66,17 @@ public class PEChartMonthActivity extends Activity {
     private static final String TEST_LICENCE = "b997d4403688d5e66a";//测试licence，不限时不限次数，请求接口的数据不全
     private static final String REAL_LICENCE = "B5EFEAC7-076D-44D2-B211-503B3E37DE0F";//真正licence,共200w次，每分钟20次
     private static final String FREE_LICENCE = "110CC0CE-4FFF-4F3B-BE85-AEDA71F2CAC6";//测试licence，每天50次，超过不给数据
-    private static int MAX_PE = 200;
+    private static float MIN_MGSY = 0.01f;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chart);
+        okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60,TimeUnit.SECONDS)
+                .writeTimeout(60,TimeUnit.SECONDS)
+                .build();
         initAdapt();
         targetMonth = getIntent().getStringExtra("month");
         progressBar = findViewById(R.id.progress_bar);
@@ -202,12 +211,11 @@ public class PEChartMonthActivity extends Activity {
      */
     public void getAllGPList(){
         try {
-            OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
                     .url("http://api.mairui.club/hslt/list/"+REAL_LICENCE)
                     .get()
                     .build();
-            Response response = client.newCall(request).execute();//发送请求获取返回数据
+            Response response = okHttpClient.newCall(request).execute();//发送请求获取返回数据
             String responseData = response.body().string();//处理返回的数据
             Type type = new TypeToken<List<GpBean>>(){}.getType();
             allGPList = new Gson().fromJson(responseData,type);
@@ -223,12 +231,11 @@ public class PEChartMonthActivity extends Activity {
      */
     public void getIndexGPList(String indexType){
         try {
-            OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
                     .url("http://api.mairui.club/hszg/gg/"+indexType+"/"+REAL_LICENCE)
                     .get()
                     .build();
-            Response response = client.newCall(request).execute();//发送请求获取返回数据
+            Response response = okHttpClient.newCall(request).execute();//发送请求获取返回数据
             String responseData = response.body().string();//处理返回的数据
             Type type = new TypeToken<List<GpBean>>(){}.getType();
             allGPList = new Gson().fromJson(responseData,type);
@@ -245,6 +252,7 @@ public class PEChartMonthActivity extends Activity {
     private List<GpDailyPriceListBean> gpDailyPriceListBeanList = new ArrayList<>();
     public void getAllGPDailyPrice(String startDay, String endDay){
         for(GpBean gpBean : allGPList){
+            if(gpBean.mc.contains("ST") || gpBean.mc.contains("退市")){continue;}
             //循环请求每个股票，在时间段内每月底的价格
             List<GpDailyPriceListBean.DailyPriceBean> dailyPriceBeanList = getGPDailyPrice(gpBean.dm,startDay,endDay);
             if(dailyPriceBeanList!=null){
@@ -271,12 +279,11 @@ public class PEChartMonthActivity extends Activity {
         try {
             //一分钟300次限制
             Thread.sleep(250);
-            OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
                     .url("http://api.mairui.club/hszbc/fsjy/"+code+"/dq/"+startDay+"/"+endDay+"/"+REAL_LICENCE)
                     .get()
                     .build();
-            Response response = client.newCall(request).execute();//发送请求获取返回数据
+            Response response = okHttpClient.newCall(request).execute();//发送请求获取返回数据
             String responseData = response.body().string();//处理返回的数据
             Type type = new TypeToken<List<GpDailyPriceListBean.DailyPriceBean>>(){}.getType();
             List<GpDailyPriceListBean.DailyPriceBean> dailyPriceBeanList = new Gson().fromJson(responseData,type);
@@ -333,12 +340,11 @@ public class PEChartMonthActivity extends Activity {
         try {
             //一分钟20次限制
             Thread.sleep(3050);
-            OkHttpClient client = new OkHttpClient();//新建一个OKHttp的对象
             Request request = new Request.Builder()
                     .url("http://api.mairui.club/hicw/yl/"+year+"/"+season+"/"+REAL_LICENCE)
                     .get()
                     .build();
-            Response response = client.newCall(request).execute();//发送请求获取返回数据
+            Response response = okHttpClient.newCall(request).execute();//发送请求获取返回数据
             String responseData = response.body().string();//处理返回的数据
             Type type = new TypeToken<List<GpProfitBean.Profit>>(){}.getType();
             List<GpProfitBean.Profit> gpProfitBeanList = new Gson().fromJson(responseData,type);
@@ -351,19 +357,29 @@ public class PEChartMonthActivity extends Activity {
     }
 
     /**
+     * 每股收益大于0小于最小每股收益股票的个数；
+     */
+    private int lessThanMinMgsyGpCount=0;
+    /**
+     * 保存正常pe的列表
+     */
+    private List<Integer>nomalPeList = new ArrayList<>();
+    /**
      * 开始计算查询时间段内每天所有股票的平均pe
      */
     private void startCalculatorAveragePe(){
         print("计算pe中。。。");
         peList.clear();
+        nomalPeList.clear();
+        lessThanMinMgsyGpCount = 0;
         for (String day :realDays){
             String log1="计算当天股票平均pe："+day;
             //循环计算范围内的每一天
-            int totalPe=0;
+            int totalRealPe=0;
             int totalSize=0;
             for (GpDailyPriceListBean dailyPriceListBean : gpDailyPriceListBeanList){
                 double price = 0;//收盘价
-                double mgsy = 10000;//每股收益，设置一个特殊的初始值用来区分一般情况
+                double mgsy = 0;//每股收益，设置一个特殊的初始值用来区分一般情况
                 String log="计算每个股票pe："+day+",code:"+dailyPriceListBean.code+",name:"+dailyPriceListBean.name;
                 //循环所有有价格数据的股票
                 //------下面获取股票当天的收盘价-------
@@ -387,7 +403,7 @@ public class PEChartMonthActivity extends Activity {
                 String[] days = day.split("-");
                 int year = Integer.parseInt(days[0]);
                 for (GpProfitBean gpProfitBean : gpProfitBeanList){
-                    //查找对应年份和季度的盈利数据
+                    //查找对应年份上一年的年报数据
                     if((year-1) == gpProfitBean.year){
                         for (GpProfitBean.Profit profit:gpProfitBean.profitList){
                             //遍历盈利列表，找到对应股票数据
@@ -397,30 +413,26 @@ public class PEChartMonthActivity extends Activity {
                                 break;
                             }
                         }
-                        if(mgsy==10000){
-                            log+="，上年年报没有数据,不统计该股票数据";
-                        }
                         break;
                     }
                 }
 
-                if(mgsy!=10000){
-                    //每股收益不是初始值才算数
-                    int pe=0;
-                    if(mgsy > 0){
+                if(mgsy>0){
+                    //每股收益大于0才算数
+                    int pe;
+                    if(mgsy >= MIN_MGSY){
                         pe = (int)(price/mgsy);
+                        nomalPeList.add(pe);
+                        totalRealPe+=pe;
                         log+=",真实pe:"+pe;
                     }else {
-                        //处理每股收益等于0和小于0的情况，设置为最大pe处理
-                        pe = MAX_PE;
+                        //每股收益大于0但小于最小每股收益阈值的股票个数
+                        lessThanMinMgsyGpCount++;
+                        log+=",每股收益小于阈值,pe使用中位数";
                     }
-                    if(pe>=MAX_PE){
-                        log+=",pe太大，改为最大值";
-                        pe=MAX_PE;
-                    }
-                    log+=",最后pe:"+pe;
-                    totalPe+=pe;
                     totalSize++;
+                }else {
+                    log+="，上年年报没有数据或每股收益小于等于0，不统计该股票数据";
                 }
                 Log.d("yue.huang",log);
             }
@@ -428,14 +440,36 @@ public class PEChartMonthActivity extends Activity {
                 //这一天所有股票都没有数据，跳过
                 continue;
             }
-            int averagePe = totalPe/totalSize;
-            log1+=",averagePe:"+averagePe;
-            peList.add(averagePe);
-            if(averagePe>maxPe){
-                maxPe = averagePe;
-            }
-            if(minPe>averagePe){
-                minPe = averagePe;
+            //中位数pe
+            int medianPe = (int)getMedian(nomalPeList);
+            if(medianPeCb.isChecked()){
+                log1+=",中位数pe:"+medianPe;
+                peList.add(medianPe);
+                if(medianPe>maxPe){
+                    maxPe = medianPe;
+                }
+                if(minPe>medianPe){
+                    minPe = medianPe;
+                }
+            }else {
+                int totalPe;
+                if(strikeoutCb.isChecked()){
+                    totalPe = totalRealPe;
+                    totalSize -= lessThanMinMgsyGpCount;
+                    log1+=",剔除每股收益小于阈值的股票";
+                }else {
+                    log1+=",中位数pe:"+medianPe;
+                    totalPe = totalRealPe+lessThanMinMgsyGpCount*medianPe;
+                }
+                int averagePe = totalPe/totalSize;
+                log1+=",averagePe:"+averagePe;
+                peList.add(averagePe);
+                if(averagePe>maxPe){
+                    maxPe = averagePe;
+                }
+                if(minPe>averagePe){
+                    minPe = averagePe;
+                }
             }
             Log.d("yue.huang",log1);
         }
@@ -480,6 +514,9 @@ public class PEChartMonthActivity extends Activity {
 
 
 
+
+    private CheckBox strikeoutCb;
+    private CheckBox medianPeCb;
     private void initAdapt(){
         final LinearLayout layoutAdapt = findViewById(R.id.layout_adapt);
         final EditText maxEt = findViewById(R.id.max_et);
@@ -489,9 +526,9 @@ public class PEChartMonthActivity extends Activity {
         updateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int max = Integer.parseInt(maxEt.getText().toString());
-                int min = Integer.parseInt(minEt.getText().toString());
-                int inv = Integer.parseInt(invEt.getText().toString());
+                int max = Integer.parseInt(TextUtils.isEmpty(maxEt.getText().toString())?chatMaxNum+"":maxEt.getText().toString());
+                int min = Integer.parseInt(TextUtils.isEmpty(minEt.getText().toString())?chatMinNum+"":minEt.getText().toString());
+                int inv = Integer.parseInt(TextUtils.isEmpty(invEt.getText().toString())?chatIntervalNum+"":invEt.getText().toString());
                 chatMaxNum = max;
                 chatMinNum = min;
                 chatIntervalNum = inv;
@@ -499,11 +536,11 @@ public class PEChartMonthActivity extends Activity {
             }
         });
 
-        final EditText maxpeEt = findViewById(R.id.maxpe_et);
+        final EditText minMgsyEt = findViewById(R.id.min_mgsy_et);
         findViewById(R.id.recalculate_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MAX_PE = Integer.parseInt(maxpeEt.getText().toString());
+                MIN_MGSY = Float.parseFloat(TextUtils.isEmpty(minMgsyEt.getText().toString())?MIN_MGSY+"":minMgsyEt.getText().toString());
                 startCalculatorAveragePe();
                 fullDataToChartAndShow();
             }
@@ -519,5 +556,34 @@ public class PEChartMonthActivity extends Activity {
                 }
             }
         });
+        strikeoutCb = findViewById(R.id.strikeout_cb);
+        medianPeCb = findViewById(R.id.median_pe_cb);
+    }
+
+
+    /**
+     * 获取列表中位数
+     * @param numbers
+     * @return
+     */
+    public static double getMedian(List<Integer> numbers) {
+        if (numbers == null || numbers.isEmpty()) {
+            throw new IllegalArgumentException("列表不能为空");
+        }
+
+        // 1. 排序列表
+        Collections.sort(numbers);
+
+        int size = numbers.size();
+        int middle = size / 2;
+
+        // 2. 判断列表长度是奇数还是偶数
+        if (size % 2 == 1) {
+            // 奇数：直接返回中间元素
+            return numbers.get(middle);
+        } else {
+            // 偶数：返回中间两个元素的平均值
+            return (numbers.get(middle - 1) + numbers.get(middle)) / 2.0;
+        }
     }
 }

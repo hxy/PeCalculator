@@ -69,10 +69,10 @@ public class PEMainActivity extends Activity {
                     case 2:selectedIndexType = IndexType.ZZ500.value;break;
                     case 3:selectedIndexType = IndexType.SWHB.value;break;
                     case 4:selectedIndexType = IndexType.SWCM.value;break;
-                    case 6:selectedIndexType = IndexType.SZXF.value;break;
-                    case 7:selectedIndexType = IndexType.SZYY.value;break;
-                    case 8:selectedIndexType = IndexType.SZJR.value;break;
-                    case 9:selectedIndexType = IndexType.SZXX.value;break;
+                    case 5:selectedIndexType = IndexType.SZXF.value;break;
+                    case 6:selectedIndexType = IndexType.SZYY.value;break;
+                    case 7:selectedIndexType = IndexType.SZJR.value;break;
+                    case 8:selectedIndexType = IndexType.SZXX.value;break;
                 }
                 Log.d("yue.huang",position+":"+selectedIndexType);
             }

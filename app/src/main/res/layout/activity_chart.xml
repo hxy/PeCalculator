@@ -80,14 +80,32 @@
             android:textSize="10sp"/>
 
         <EditText
-            android:id="@+id/maxpe_et"
+            android:id="@+id/min_mgsy_et"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColorHint="@color/colorPrimary"
-            android:inputType="number"
+            android:inputType="numberDecimal"
             android:textSize="10sp"
-            android:hint="最大pe"
+            android:hint="最小每股收益"
             android:layout_marginStart="20dp"/>
+        <CheckBox
+            android:id="@+id/strikeout_cb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="剔除每股收益小于阈值的股票"
+            android:checked="false"
+            android:textSize="10sp"
+            android:textColor="@color/colorPrimary"/>
+
+        <CheckBox
+            android:id="@+id/median_pe_cb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="表格使用中位数填充"
+            android:checked="false"
+            android:textSize="10sp"
+            android:textColor="@color/colorPrimary"/>
+
         <TextView
             android:id="@+id/recalculate_btn"
             android:layout_width="wrap_content"
@@ -104,8 +122,9 @@
         android:background="@color/colorPrimary"
         android:text="调整"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
         android:textSize="10sp"
-        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:layout_marginEnd="10dp"/>
 
 </RelativeLayout>
